@@ -47,8 +47,8 @@ export const AuthProvider = ({ children }) => {
     return { success: false, message: data.message };
   };
 
-  const Signup = async (name, email, password, role) => {
-    const res = await fetch('/api/auth/Signup', {
+  const signup = async (name, email, password, role) => {
+    const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password, role })
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, Signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

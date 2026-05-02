@@ -1,4 +1,5 @@
 const Project = require('../models/Project');
+const Task = require('../models/Task');
 
 // @desc    Get all projects for a user
 // @route   GET /api/projects
@@ -10,8 +11,8 @@ const getProjects = async (req, res) => {
       // Admin sees projects they own
       projects = await Project.find({ owner: req.user.id }).populate('members', 'name email');
     } else {
-      // Member sees projects they are a member of
-      projects = await Project.find({ members: req.user.id }).populate('owner', 'name email');
+      // Member sees all projects created by Admins
+      projects = await Project.find({}).populate('owner', 'name email').populate('members', 'name email');
     }
     res.json(projects);
   } catch (error) {
@@ -66,4 +67,30 @@ const updateProject = async (req, res) => {
   }
 };
 
-module.exports = { getProjects, createProject, updateProject };
+// @desc    Delete a project and its tasks
+// @route   DELETE /api/projects/:id
+// @access  Private/Admin
+const deleteProject = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    if (project.owner.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized to delete this project' });
+    }
+
+    // Cascade delete: remove all tasks belonging to this project
+    await Task.deleteMany({ project: req.params.id });
+
+    await Project.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Project and associated tasks deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getProjects, createProject, updateProject, deleteProject };

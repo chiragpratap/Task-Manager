@@ -5,6 +5,7 @@ const Tasks = () => {
   const { user } = useContext(AuthContext);
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Form state for Admin
@@ -12,6 +13,7 @@ const Tasks = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [projectId, setProjectId] = useState('');
+  const [assignedTo, setAssignedTo] = useState('');
 
   const fetchData = async () => {
     try {
@@ -22,6 +24,14 @@ const Tasks = () => {
       
       if (tasksRes.ok) setTasks(await tasksRes.json());
       if (projectsRes.ok) setProjects(await projectsRes.json());
+
+      // Admin fetches members list for assignment
+      if (user.role === 'Admin') {
+        const usersRes = await fetch('/api/auth/users', {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+        if (usersRes.ok) setMembers(await usersRes.json());
+      }
     } catch (error) {
       console.error('Failed to fetch data', error);
     } finally {
@@ -36,18 +46,22 @@ const Tasks = () => {
   const handleCreateTask = async (e) => {
     e.preventDefault();
     try {
+      const taskData = { title, description, project: projectId };
+      if (assignedTo) taskData.assignedTo = assignedTo;
+
       const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${user.token}`
         },
-        body: JSON.stringify({ title, description, project: projectId })
+        body: JSON.stringify(taskData)
       });
       if (res.ok) {
         setTitle('');
         setDescription('');
         setProjectId('');
+        setAssignedTo('');
         setShowForm(false);
         fetchData();
       }
@@ -79,7 +93,7 @@ const Tasks = () => {
   return (
     <div>
       <div className="flex-between" style={{ marginBottom: '2rem' }}>
-        <h1>Tasks</h1>
+        <h1>{user.role === 'Admin' ? 'All Tasks' : 'My Assigned Tasks'}</h1>
         {user.role === 'Admin' && (
           <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
             {showForm ? 'Cancel' : '+ New Task'}
@@ -108,6 +122,15 @@ const Tasks = () => {
                 ))}
               </select>
             </div>
+            <div className="form-group">
+              <label className="form-label">Assign To Member</label>
+              <select className="form-select" value={assignedTo} onChange={e => setAssignedTo(e.target.value)}>
+                <option value="">Unassigned</option>
+                {members.map(m => (
+                  <option key={m._id} value={m._id}>{m.name} ({m.email})</option>
+                ))}
+              </select>
+            </div>
             <button type="submit" className="btn btn-primary" disabled={!projectId}>Create Task</button>
           </form>
         </div>
@@ -119,14 +142,17 @@ const Tasks = () => {
             <tr>
               <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>Task</th>
               <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>Project</th>
+              <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>Assigned To</th>
               <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>Status</th>
-              <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>Actions</th>
+              <th style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>Update Status</th>
             </tr>
           </thead>
           <tbody>
             {tasks.length === 0 ? (
               <tr>
-                <td colSpan="4" style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>No tasks found.</td>
+                <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  {user.role === 'Member' ? 'No tasks assigned to you yet.' : 'No tasks found. Create one above!'}
+                </td>
               </tr>
             ) : (
               tasks.map(task => (
@@ -136,6 +162,17 @@ const Tasks = () => {
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{task.description}</div>
                   </td>
                   <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{task.project?.title || 'Unknown'}</td>
+                  <td style={{ padding: '1rem' }}>
+                    <span style={{ 
+                      backgroundColor: task.assignedTo ? '#DBEAFE' : '#F3F4F6', 
+                      color: task.assignedTo ? '#1E40AF' : '#6B7280',
+                      padding: '0.25rem 0.75rem', 
+                      borderRadius: '1rem', 
+                      fontSize: '0.875rem' 
+                    }}>
+                      {task.assignedTo?.name || 'Unassigned'}
+                    </span>
+                  </td>
                   <td style={{ padding: '1rem' }}>
                     <span className={`status-badge status-${task.status.replace(' ', '').toLowerCase()}`}>
                       {task.status}

@@ -1,11 +1,12 @@
 import React, { useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { LogOut, LayoutDashboard, FolderKanban, CheckSquare } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -14,22 +15,48 @@ const Navbar = () => {
 
   if (!user) return null;
 
+  const isActive = (path) => location.pathname === path;
+
   return (
     <nav className="navbar">
-      <Link to="/" className="navbar-brand">TaskMaster</Link>
+      <Link to="/" className="navbar-brand">✦ TaskMaster</Link>
+
       <div className="navbar-links">
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <LayoutDashboard size={18} /> Dashboard
+        <Link
+          to="/"
+          className={`nav-link ${isActive('/') ? 'active' : ''}`}
+        >
+          <LayoutDashboard size={16} /> Dashboard
         </Link>
-        <Link to="/projects" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <FolderKanban size={18} /> Projects
+        <Link
+          to="/projects"
+          className={`nav-link ${isActive('/projects') ? 'active' : ''}`}
+        >
+          <FolderKanban size={16} /> Projects
         </Link>
-        <Link to="/tasks" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <CheckSquare size={18} /> Tasks
+        <Link
+          to="/tasks"
+          className={`nav-link ${isActive('/tasks') ? 'active' : ''}`}
+        >
+          <CheckSquare size={16} /> Tasks
         </Link>
-        <span style={{ fontWeight: 500, color: 'var(--text-muted)' }}>| {user.name} ({user.role})</span>
-        <button onClick={handleLogout} className="btn btn-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.75rem' }}>
-          <LogOut size={16} /> Logout
+
+        <div className="nav-divider" />
+
+        <div className="nav-user">
+          <div className="nav-user-avatar">
+            {user.name?.charAt(0).toUpperCase()}
+          </div>
+          <span className="nav-user-info">{user.name}</span>
+          <span className="nav-role-badge">{user.role}</span>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="btn btn-ghost btn-sm"
+          id="logout-button"
+        >
+          <LogOut size={14} /> Logout
         </button>
       </div>
     </nav>

@@ -60,8 +60,8 @@ const updateTask = async (req, res) => {
       return res.status(404).json({ message: 'Task not found' });
     }
 
-    // Check authorization
-    if (req.user.role !== 'Admin' && task.assignedTo.toString() !== req.user.id) {
+    // Check authorization - Members can update status on tasks assigned to them
+    if (req.user.role !== 'Admin' && (!task.assignedTo || task.assignedTo.toString() !== req.user.id)) {
       return res.status(401).json({ message: 'Not authorized to update this task' });
     }
 
@@ -83,4 +83,29 @@ const updateTask = async (req, res) => {
   }
 };
 
-module.exports = { getTasks, createTask, updateTask };
+// @desc    Delete a task
+// @route   DELETE /api/tasks/:id
+// @access  Private/Admin
+const deleteTask = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    // Verify the task's project belongs to the admin
+    const project = await Project.findById(task.project);
+    if (!project || project.owner.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized to delete this task' });
+    }
+
+    await Task.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Task deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getTasks, createTask, updateTask, deleteTask };
