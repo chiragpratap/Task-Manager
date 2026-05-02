@@ -1,3 +1,56 @@
+# Task Manager
+
+## Overview
+This project is a Task Manager application built with React and Vite. It allows users to manage their tasks efficiently, providing features for creating, updating, and deleting tasks.
+
+## Features
+- User authentication
+- Task creation and management
+- Project organization
+- Responsive design
+
+## Getting Started
+
+### Prerequisites
+- Node.js (version 14 or higher)
+- npm or yarn
+
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/chiragpratap/Task-Manager.git
+   ```
+2. Navigate to the frontend directory:
+   ```bash
+   cd Task-Manager/frontend
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+   or
+   ```bash
+   yarn install
+   ```
+
+### Running the Application
+To start the development server, run:
+```bash
+npm run dev
+```
+
+### Building for Production
+To build the application for production, run:
+```bash
+npm run build
+```
+
+## Contributing
+Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+
+## License
+This project is licensed under the MIT License.
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
